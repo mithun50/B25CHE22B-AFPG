@@ -1,3 +1,27 @@
+// ── Analytics Config ─────────────────────────────────────────────────────────
+// Paste your Google Apps Script Web App URL here (the one that logs to Sheets)
+const SHEET_LOG_URL = 'https://script.google.com/macros/s/AKfycbyZCecryoDcGKXVP1V5u5bu8qlRSVjD_998i-P79WxsBpzJHo490Z5zliS67zqREivkNg/exec';
+
+async function logGeneration(type) {
+  if (!SHEET_LOG_URL || SHEET_LOG_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL') return;
+  try {
+    await fetch(SHEET_LOG_URL, {
+      method: 'POST',
+      mode: 'no-cors', // Apps Script doesn't need CORS preflight for POST
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type,
+        studentName: formEls.studentName?.value || '',
+        subject:     formEls.subjectName?.value || '',
+        topic:       formEls.reportTopic?.value || '',
+        semester:    formEls.semester?.value    || '',
+        section:     formEls.section?.value     || '',
+      })
+    });
+  } catch (_) { /* silent fail — never block the user */ }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Elements
 const formEls = {
   reportTopic: document.getElementById('f-report-topic'),
@@ -105,6 +129,7 @@ document.getElementById('btn-download').addEventListener('click', async () => {
     // Download
     const fileName = `Chemistry_Front_Page_${formEls.studentName.value.replace(/\s+/g, '_')}.pdf`;
     pdf.save(fileName);
+    logGeneration('PDF');
 
     // Restore zoom
     zoomLevel = oldZoom;
@@ -151,6 +176,7 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    logGeneration('PNG');
 
     zoomLevel = oldZoom;
     updateZoom();
