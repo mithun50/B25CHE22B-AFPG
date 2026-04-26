@@ -1,0 +1,494 @@
+/* ==========================================================================
+   Base & App Styles (Modern UI)
+   ========================================================================== */
+   :root {
+    --bg-color: #f8fafc;
+    --sidebar-bg: rgba(255, 255, 255, 0.95);
+    --border-color: #e2e8f0;
+    --primary-color: #4f46e5;
+    --primary-hover: #4338ca;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+  }
+  
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-color);
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 20px 20px;
+    color: var(--text-main);
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .app-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+  }
+  
+  .sidebar {
+    width: 400px;
+    background: var(--sidebar-bg);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.06);
+  }
+  
+  .sidebar-header {
+    padding: 28px 24px 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .sidebar-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  
+  .sidebar-header p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  
+  .header-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .creator-credit {
+    font-size: 0.8rem !important;
+    color: var(--primary-color) !important;
+    background: #e0e7ff;
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin: 0;
+  }
+  .creator-credit strong {
+    font-weight: 700;
+  }
+
+  .github-link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--text-main);
+    text-decoration: none;
+    font-weight: 600;
+    background: #e2e8f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s, transform 0.1s;
+  }
+  
+  .github-link:hover {
+    background: #cbd5e1;
+  }
+  .github-link:active {
+    transform: scale(0.95);
+  }
+  
+  #generator-form {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  
+  #generator-form::-webkit-scrollbar {
+    width: 6px;
+  }
+  #generator-form::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  
+  .sidebar-divider {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 4px 0;
+  }
+
+  h4 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: var(--primary-color);
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    margin-bottom: -4px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 16px;
+  }
+  
+  .form-row .form-group {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  
+  input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    background: #fff;
+    color: #334155;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  }
+  
+  input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+  
+  .sidebar-footer {
+    padding: 24px;
+    border-top: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .btn-primary, .btn-secondary {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+  }
+  
+  .btn-primary {
+    background: var(--primary-color);
+    color: #fff;
+  }
+  
+  .btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  }
+  
+  .btn-secondary {
+    background: #f1f5f9;
+    color: var(--text-main);
+    border: 1px solid #cbd5e1;
+  }
+  
+  .btn-secondary:hover {
+    background: #e2e8f0;
+  }
+  
+  .btn-primary:active, .btn-secondary:active {
+    transform: translateY(0) scale(0.98);
+  }
+  
+  /* ==========================================================================
+     Preview Area (Wrapper for A4)
+     ========================================================================== */
+  .preview-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .preview-toolbar {
+    height: 60px;
+    background: rgba(255, 255, 255, 0.85);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+    font-size: 1rem;
+    font-weight: 600;
+    backdrop-filter: blur(12px);
+  }
+
+  .zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #fff;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  
+  .zoom-controls button {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background 0.2s;
+    color: var(--text-main);
+  }
+  
+  .zoom-controls button:hover {
+    background: #f1f5f9;
+  }
+  
+  .preview-wrapper {
+    flex: 1;
+    overflow: auto;
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  /* ==========================================================================
+     EXACT HTML TEMPLATE STYLES (A4, Times New Roman, specific fonts)
+     ========================================================================== */
+  
+  #template-root {
+    transform-origin: top center;
+    transition: transform 0.2s ease;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1), 0 5px 15px rgba(0,0,0,0.05);
+  }
+  
+  #template-root .page {
+    /* A4 dimensions at 96 DPI */
+    width: 794px;
+    min-height: 1123px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    /* Times New Roman to perfectly match standard academic reports */
+    font-family: "Times New Roman", Times, serif;
+    color: #000;
+    padding: 18px;
+  }
+  
+  /* Double Border */
+  #template-root .page-border-outer {
+    flex: 1;
+    border: 4px solid #000;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #template-root .page-border-inner {
+    flex: 1;
+    border: 2px solid #000;
+    padding: 50px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Header ── */
+  #template-root .header {
+    text-align: center;
+    margin-bottom: 25px;
+    width: 100%;
+    line-height: 1.5;
+  }
+  
+  #template-root .college-name {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+  
+  #template-root .university-name {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  
+  #template-root .autonomous-badge {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  
+  /* ── Logos ── */
+  #template-root .logo-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  #template-root .vtu-container {
+    margin-bottom: 30px;
+  }
+
+  #template-root .vtu-logo {
+    height: 125px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  #template-root .dbit-container {
+    margin: 40px 0 20px 0;
+  }
+
+  #template-root .dbit-logo {
+    height: 130px;
+    width: auto;
+    object-fit: contain;
+  }
+  
+  /* ── Topic Section ── */
+  #template-root .topic-section {
+    text-align: center;
+    margin-bottom: 25px;
+    width: 100%;
+    line-height: 1.6;
+  }
+
+  #template-root .report-topic {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  #template-root .subject-name {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  /* ── Degree Info ── */
+  #template-root .degree-info {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 18px;
+    line-height: 1.8;
+  }
+  
+  /* ── Submitted By Section ── */
+  #template-root .submitted-by-header {
+    font-size: 18px;
+    margin-top: 10px;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+
+  #template-root .footer-columns {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 10px;
+    font-size: 18px;
+    line-height: 1.8;
+    margin-top: auto; /* Pushes to the bottom */
+  }
+
+  #template-root .student-column,
+  #template-root .guide-column {
+    text-align: left;
+  }
+
+  #template-root .info-row {
+    margin-bottom: 8px;
+  }
+
+  #template-root .info-label {
+    display: inline-block;
+    min-width: 50px; /* Aligns "Name:" and "Sem:" */
+  }
+
+  #template-root .guide-column .info-label {
+    min-width: 85px; /* Aligns "Guided By:" */
+  }
+  
+  /* ==========================================================================
+     Mobile Responsiveness
+     ========================================================================== */
+  @media screen and (max-width: 768px) {
+    .app-container {
+      flex-direction: column;
+      overflow-y: auto;
+    }
+  
+    body {
+      overflow-y: auto;
+    }
+  
+    .sidebar {
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid var(--border-color);
+      flex: none;
+    }
+  
+    #generator-form {
+      overflow-y: visible;
+    }
+  
+    .preview-area {
+      flex: none;
+      overflow: visible;
+    }
+  
+    .preview-wrapper {
+      padding: 20px;
+      overflow-x: auto;
+      justify-content: flex-start;
+    }
+  
+    #template-root {
+      transform-origin: top left;
+      /* Better scaling for mobile */
+      transform: scale(0.4) !important;
+    }
+    
+    .preview-toolbar {
+      /* Ensure toolbar doesn't overlap weirdly */
+      z-index: 10;
+      position: sticky;
+      top: 0;
+    }
+  }

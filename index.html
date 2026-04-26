@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemistry Front Page Generator</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Load html2canvas and jsPDF for generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- App UI -->
+  <div class="app-container">
+    
+    <!-- Sidebar Form -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Chemistry Front Page</h2>
+        <p>Fill in your details. We generate a perfectly crisp, 100% clean PDF instantly.</p>
+        <div class="header-links">
+          <p class="creator-credit">Created by <strong>Mithun Gowda B</strong></p>
+          <a href="https://github.com/mithun50/B25CHE22B-AFPG" target="_blank" class="github-link" title="View Source on GitHub">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+
+      <form id="generator-form">
+        <div class="form-group">
+          <label for="f-report-topic">Report Topic</label>
+          <input type="text" id="f-report-topic" value="REPORT ON SIZE DEPENDENT PROPERTIES OF NANO MATERIAL">
+        </div>
+
+        <div class="form-group">
+          <label for="f-subject-name">Subject Name</label>
+          <input type="text" id="f-subject-name" value="CHEMISTRY FOR SMART SYSTEM">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-degree">Degree</label>
+            <input type="text" id="f-degree" value="Bachelor of Engineering">
+          </div>
+          <div class="form-group">
+            <label for="f-branch">Branch</label>
+            <input type="text" id="f-branch" value="Computer Science and Engineering">
+          </div>
+        </div>
+
+        <hr class="sidebar-divider">
+
+        <h4>Student Details</h4>
+        <div class="form-group">
+          <label for="f-student-name">Name</label>
+          <input type="text" id="f-student-name" value="Mithun Gowda B">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-semester">Semester</label>
+            <input type="text" id="f-semester" value="2nd sem">
+          </div>
+          <div class="form-group">
+            <label for="f-section">Section</label>
+            <input type="text" id="f-section" value="'B' section">
+          </div>
+        </div>
+
+        <hr class="sidebar-divider">
+
+        <h4>Guide Details</h4>
+        <div class="form-group">
+          <label for="f-guide-name">Guide Name</label>
+          <input type="text" id="f-guide-name" value="Dr. N V Sushma">
+        </div>
+
+        <div class="form-group">
+          <label for="f-guide-title">Title</label>
+          <input type="text" id="f-guide-title" value="Assistant Professor">
+        </div>
+
+        <div class="form-group">
+          <label for="f-guide-dept">Department</label>
+          <input type="text" id="f-guide-dept" value="Department of Chemistry">
+        </div>
+      </form>
+
+      <div class="sidebar-footer">
+        <button id="btn-export-png" class="btn-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          Export as PNG
+        </button>
+        <button id="btn-download" class="btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Download PDF
+        </button>
+      </div>
+    </aside>
+
+    <!-- Preview Area -->
+    <main class="preview-area">
+      <div class="preview-toolbar">
+        <span>Live Exact Preview</span>
+        <div class="zoom-controls">
+          <button id="btn-zoom-out" title="Zoom Out">-</button>
+          <span id="zoom-level">80%</span>
+          <button id="btn-zoom-in" title="Zoom In">+</button>
+        </div>
+      </div>
+      <div class="preview-wrapper">
+        <div id="template-root" class="page-template">
+          
+          <div class="page">
+            <div class="page-border-outer">
+              <div class="page-border-inner">
+                
+                <!-- Header -->
+                <div class="header">
+                  <div class="college-name">DON BOSCO INSTITUTE OF TECHNOLOGY</div>
+                  <div class="university-name">VISVESVARAYA TECHNOLOGY UNIVERSITY</div>
+                  <div class="autonomous-badge">AN AUTONOMOUS INSTITUTION UNDER VTU</div>
+                </div>
+
+                <!-- VTU Logo Placeholder -->
+                <div class="logo-container vtu-container">
+                  <img src="VTU.png" class="vtu-logo" alt="VTU Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIj48Y2lyY2xlIGN4PSI3MCIgY3k9IjcwIiByPSI2NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZTVlN2ViIiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzljYTNhZiIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTRweCI+VlRVIExvZ288L3RleHQ+PC9zdmc+'">
+                </div>
+
+                <!-- Topic & Subject -->
+                <div class="topic-section">
+                  <div class="report-topic" id="t-report-topic">REPORT ON SIZE DEPENDENT PROPERTIES OF NANO MATERIAL</div>
+                  <div class="subject-name">SUBJECT:<span id="t-subject-name">CHEMISTRY FOR SMART SYSTEM</span></div>
+                </div>
+
+                <!-- Degree Info -->
+                <div class="degree-info">
+                  <div id="t-degree">Bachelor of Engineering</div>
+                  <div>In</div>
+                  <div id="t-branch">Computer Science and Engineering</div>
+                </div>
+
+                <!-- DBIT Logo Placeholder -->
+                <div class="logo-container dbit-container">
+                  <img src="dblogo.png" class="dbit-logo" alt="DBIT Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIj48Y2lyY2xlIGN4PSI3MCIgY3k9IjcwIiByPSI2NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZTVlN2ViIiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzljYTNhZiIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTRweCI+REJJVCBMb2dvPC90ZXh0Pjwvc3ZnPg=='">
+                </div>
+
+                <!-- Submitted By Section -->
+                <div class="submitted-by-header">Submitted By</div>
+
+                <div class="footer-columns">
+                  <!-- Student Details -->
+                  <div class="student-column">
+                    <div class="info-row">
+                      <span class="info-label">Name:</span> <span class="info-value" id="t-student-name">Mithun Gowda B</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Sem:</span> <span class="info-value"><span id="t-semester">2nd sem</span> <span id="t-section">'B' section</span></span>
+                    </div>
+                  </div>
+
+                  <!-- Guide Details -->
+                  <div class="guide-column">
+                    <div class="info-row">
+                      <span class="info-label">Guided By:</span> <span class="info-value" id="t-guide-name">Dr. N V Sushma</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-value" id="t-guide-title">Assistant Professor</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-value" id="t-guide-dept">Department of Chemistry</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
