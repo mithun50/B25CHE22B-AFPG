@@ -12,7 +12,9 @@ async function logGeneration(type) {
       body: JSON.stringify({
         type,
         studentName: formEls.studentName?.value || '',
+        usn:         formEls.usn?.value         || '',
         subject:     formEls.subjectName?.value || '',
+        subjectCode: formEls.subjectCode?.value || '',
         topic:       formEls.reportTopic?.value || '',
         semester:    formEls.semester?.value    || '',
         section:     formEls.section?.value     || '',
@@ -26,9 +28,11 @@ async function logGeneration(type) {
 const formEls = {
   reportTopic: document.getElementById('f-report-topic'),
   subjectName: document.getElementById('f-subject-name'),
+  subjectCode: document.getElementById('f-subject-code'),
   degree: document.getElementById('f-degree'),
   branch: document.getElementById('f-branch'),
   studentName: document.getElementById('f-student-name'),
+  usn:         document.getElementById('f-usn'),
   semester: document.getElementById('f-semester'),
   section: document.getElementById('f-section'),
   guideName: document.getElementById('f-guide-name'),
@@ -39,9 +43,11 @@ const formEls = {
 const templateEls = {
   reportTopic: document.getElementById('t-report-topic'),
   subjectName: document.getElementById('t-subject-name'),
+  subjectCode: document.getElementById('t-subject-code'),
   degree: document.getElementById('t-degree'),
   branch: document.getElementById('t-branch'),
   studentName: document.getElementById('t-student-name'),
+  usn:         document.getElementById('t-usn'),
   semester: document.getElementById('t-semester'),
   section: document.getElementById('t-section'),
   guideName: document.getElementById('t-guide-name'),

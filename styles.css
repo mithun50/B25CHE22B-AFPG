@@ -411,9 +411,8 @@
   /* ── Submitted By Section ── */
   #template-root .submitted-by-header {
     font-size: 18px;
-    margin-top: 10px;
-    margin-bottom: 30px;
-    text-align: center;
+    margin-bottom: 8px;
+    text-align: left;
   }
 
   #template-root .footer-columns {
