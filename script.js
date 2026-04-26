@@ -1,6 +1,6 @@
 // ── Analytics Config ─────────────────────────────────────────────────────────
 // Paste your Google Apps Script Web App URL here (the one that logs to Sheets)
-const SHEET_LOG_URL = 'https://script.google.com/macros/s/AKfycbyZCecryoDcGKXVP1V5u5bu8qlRSVjD_998i-P79WxsBpzJHo490Z5zliS67zqREivkNg/exec';
+const SHEET_LOG_URL = 'https://script.google.com/macros/s/AKfycbwcD9HNG1avawB_twRVPq6pdc0O6_VLLnX9uFRbeuwfxcp4JlPXqV57wYif2CmzXkQWvA/exec';
 
 async function logGeneration(type) {
   if (!SHEET_LOG_URL || SHEET_LOG_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL') return;
