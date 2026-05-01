@@ -99,38 +99,41 @@ document.getElementById('btn-download').addEventListener('click', async () => {
   btn.disabled = true;
 
   try {
-    // Reset zoom temporarily to ensure crisp 1:1 render
-    const oldZoom = zoomLevel;
-    zoomLevel = 1.0;
-    updateZoom();
-
-    // Small delay to allow DOM to visually update
-    await new Promise(resolve => setTimeout(resolve, 100));
-
+    // --- Isolated Clone Capture (Mobile-safe) ---
+    // We never touch the live DOM's transform. Instead, we clone the A4 page,
+    // place it off-screen at 1:1 scale with no parent transforms, capture it,
+    // then destroy the clone. This is the only reliable cross-device approach.
     const pageElement = document.querySelector('#template-root .page');
+    const clone = pageElement.cloneNode(true);
+    clone.style.cssText = [
+      'position: fixed',
+      'top: -9999px',
+      'left: -9999px',
+      'width: 794px',
+      'min-height: 1123px',
+      'transform: none',
+      'z-index: -1',
+      'background: #fff',
+      'font-family: "Times New Roman", Times, serif',
+    ].join(';');
+    document.body.appendChild(clone);
 
-    // Take snapshot
-    const canvas = await html2canvas(pageElement, {
-      scale: 2, // High resolution
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    const canvas = await html2canvas(clone, {
+      scale: 2,
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: 1400, // Force desktop layout width
       width: 794,
-      height: 1123,
+      height: clone.scrollHeight || 1123,
+      windowWidth: 794,
       scrollX: 0,
-      scrollY: 0,
-      onclone: (clonedDoc) => {
-        // Remove sidebar in clone to give full width to the page preview
-        const sidebar = clonedDoc.querySelector('.sidebar');
-        if (sidebar) sidebar.style.display = 'none';
-        const previewArea = clonedDoc.querySelector('.preview-area');
-        if (previewArea) {
-          previewArea.style.width = '100vw';
-          previewArea.style.overflow = 'visible';
-        }
-      }
+      scrollY: 0
     });
+
+    document.body.removeChild(clone);
+    // --- End Clone Capture ---
 
     const imgData = canvas.toDataURL('image/png');
 
@@ -152,10 +155,6 @@ document.getElementById('btn-download').addEventListener('click', async () => {
     pdf.save(fileName);
     logGeneration('PDF');
 
-    // Restore zoom
-    zoomLevel = oldZoom;
-    updateZoom();
-
   } catch (error) {
     console.error("Error generating PDF:", error);
     alert("Failed to generate PDF. Make sure images are on the same domain or properly configured for CORS.");
@@ -173,34 +172,38 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
   btn.disabled = true;
 
   try {
-    const oldZoom = zoomLevel;
-    zoomLevel = 1.0;
-    updateZoom();
-
-    await new Promise(resolve => setTimeout(resolve, 100));
-
+    // --- Isolated Clone Capture (Mobile-safe) ---
     const pageElement = document.querySelector('#template-root .page');
+    const clone = pageElement.cloneNode(true);
+    clone.style.cssText = [
+      'position: fixed',
+      'top: -9999px',
+      'left: -9999px',
+      'width: 794px',
+      'min-height: 1123px',
+      'transform: none',
+      'z-index: -1',
+      'background: #fff',
+      'font-family: "Times New Roman", Times, serif',
+    ].join(';');
+    document.body.appendChild(clone);
 
-    const canvas = await html2canvas(pageElement, {
-      scale: 3, // Very high resolution for image export
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    const canvas = await html2canvas(clone, {
+      scale: 3,
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: 1400, // Force desktop layout width
       width: 794,
-      height: 1123,
+      height: clone.scrollHeight || 1123,
+      windowWidth: 794,
       scrollX: 0,
-      scrollY: 0,
-      onclone: (clonedDoc) => {
-        const sidebar = clonedDoc.querySelector('.sidebar');
-        if (sidebar) sidebar.style.display = 'none';
-        const previewArea = clonedDoc.querySelector('.preview-area');
-        if (previewArea) {
-          previewArea.style.width = '100vw';
-          previewArea.style.overflow = 'visible';
-        }
-      }
+      scrollY: 0
     });
+
+    document.body.removeChild(clone);
+    // --- End Clone Capture ---
 
     const imgData = canvas.toDataURL('image/png');
     
@@ -212,9 +215,6 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
     a.click();
     document.body.removeChild(a);
     logGeneration('PNG');
-
-    zoomLevel = oldZoom;
-    updateZoom();
 
   } catch (error) {
     console.error("Error exporting PNG:", error);
