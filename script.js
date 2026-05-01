@@ -202,6 +202,21 @@ async function capturePageClean(renderScale) {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─── Mobile detection & toast ───────────────────────────────────────────────
+const isMobile = () => /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
+function showToast(message) {
+  const existing = document.getElementById('export-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.id = 'export-toast';
+  toast.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>${message}</span>`;
+  toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:14px 20px;border-radius:12px;display:flex;align-items:center;gap:10px;font-family:sans-serif;font-size:14px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.3);z-index:99999;max-width:90vw;text-align:center';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 5000);
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // PDF Generation
 document.getElementById('btn-download').addEventListener('click', async () => {
   const btn = document.getElementById('btn-download');
@@ -210,6 +225,10 @@ document.getElementById('btn-download').addEventListener('click', async () => {
   btn.disabled = true;
 
   try {
+    if (isMobile()) {
+      showToast('Please open on a laptop or desktop to export.');
+      return;
+    }
     const canvas = await capturePageClean(2);
     const imgData = canvas.toDataURL('image/png');
 
@@ -240,6 +259,10 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
   btn.disabled = true;
 
   try {
+    if (isMobile()) {
+      showToast('Please open on a laptop or desktop to export.');
+      return;
+    }
     const canvas = await capturePageClean(3);
     const imgData = canvas.toDataURL('image/png');
 
