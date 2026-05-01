@@ -91,93 +91,118 @@ zoomOutBtn.addEventListener('click', () => {
 // Initialize zoom
 updateZoom();
 
-// ─── Shared capture helper ─────────────────────────────────────────────────
-// Creates a hidden 794px-wide iframe via srcdoc (inherits parent base URL,
-// so styles.css / images resolve correctly) and renders the A4 page inside it
-// completely isolated from all mobile transforms and layout constraints.
-function capturePageViaIframe(scale) {
-  return new Promise((resolve, reject) => {
-    const pageHTML = document.querySelector('#template-root .page').outerHTML;
+// ─── Fetch image as base64 ───────────────────────────────────────────────────
+async function fetchAsBase64(url) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
 
-    // srcdoc iframes use the parent page's URL as base, so relative paths work
-    const srcdoc = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    /* Exact desktop A4 environment — no mobile overrides */
-    html, body {
-      margin: 0; padding: 0;
-      width: 794px;
-      background: #fff;
-      overflow: hidden;
-    }
-    .page {
-      width: 794px !important;
-      min-height: 1123px !important;
-      transform: none !important;
-      font-family: "Times New Roman", Times, serif !important;
-      box-shadow: none !important;
-    }
-  </style>
-</head>
-<body>
-  ${pageHTML}
-</body>
-</html>`;
+// ─── All CSS needed to render the A4 page (no #template-root prefix needed) ──
+const PAGE_CSS = `
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.page {
+  width: 794px; min-height: 1123px; background: #fff;
+  display: flex; flex-direction: column; position: relative;
+  font-family: "Times New Roman", Times, serif; color: #000; padding: 18px;
+}
+.page-border-outer {
+  flex: 1; border: 4px solid #000; padding: 4px;
+  display: flex; flex-direction: column;
+}
+.page-border-inner {
+  flex: 1; border: 2px solid #000; padding: 50px 40px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.header { text-align: center; margin-bottom: 25px; width: 100%; line-height: 1.5; }
+.college-name { font-size: 24px; font-weight: bold; margin-bottom: 4px; letter-spacing: 0.5px; }
+.university-name { font-size: 16px; margin-bottom: 4px; }
+.autonomous-badge { font-size: 15px; margin-bottom: 10px; }
+.logo-container { display: flex; justify-content: center; width: 100%; }
+.vtu-container { margin-bottom: 30px; }
+.vtu-logo { height: 125px; width: auto; object-fit: contain; }
+.dbit-container { margin: 40px 0 20px 0; }
+.dbit-logo { height: 130px; width: auto; object-fit: contain; }
+.topic-section { text-align: center; margin-bottom: 25px; width: 100%; line-height: 1.6; }
+.report-topic { font-size: 18px; margin-bottom: 8px; }
+.subject-name { font-size: 18px; font-weight: bold; }
+.degree-info { text-align: center; margin-bottom: 20px; font-size: 18px; line-height: 1.8; }
+.submitted-by-header { font-size: 18px; margin-bottom: 8px; text-align: left; }
+.footer-columns {
+  display: flex; justify-content: space-between; width: 100%;
+  padding: 0 10px; font-size: 18px; line-height: 1.8; margin-top: auto;
+}
+.student-column, .guide-column { text-align: left; }
+.info-row { margin-bottom: 8px; }
+.info-label { display: inline-block; min-width: 50px; }
+.guide-column .info-label { min-width: 85px; }
+`;
 
-    const iframe = document.createElement('iframe');
-    iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts');
-    iframe.style.cssText = [
-      'position:fixed',
-      'top:-9999px',
-      'left:-9999px',
-      'width:794px',
-      'height:1123px',
-      'border:none',
-      'visibility:hidden',
-      'pointer-events:none',
-    ].join(';');
+// ─── Self-contained capture (works on all devices) ───────────────────────────
+// Strategy:
+//   1. Pre-fetch both logos as base64  → no CORS, no network issues
+//   2. Inline ALL required CSS         → no external stylesheet dependency
+//   3. Render as direct <body> child   → zero parent transforms
+//   4. Capture, then destroy           → clean, no side effects
+async function capturePageClean(renderScale) {
+  // 1. Pre-fetch logos as base64 data URIs
+  const [vtuB64, dbitB64] = await Promise.all([
+    fetchAsBase64('VTU.png'),
+    fetchAsBase64('dblogo.png'),
+  ]);
 
-    iframe.onload = async () => {
-      try {
-        // Wait for stylesheet + images to fully load inside the iframe
-        await new Promise(r => setTimeout(r, 800));
+  // 2. Get current live page HTML, swap image src with base64
+  let pageHTML = document.querySelector('#template-root .page').outerHTML;
+  if (vtuB64)  pageHTML = pageHTML.replace(/src="VTU\.png[^"]*"/,    `src="${vtuB64}"`);
+  if (dbitB64) pageHTML = pageHTML.replace(/src="dblogo\.png[^"]*"/, `src="${dbitB64}"`);
 
-        const pageEl = iframe.contentDocument.querySelector('.page');
-        if (!pageEl) throw new Error('Page element not found in iframe');
+  // 3. Build fully isolated wrapper directly on body
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = [
+    'position:fixed',
+    'top:-9999px',
+    'left:-9999px',
+    'width:794px',
+    'overflow:visible',
+    'transform:none',
+    'z-index:99999',
+    'background:#fff',
+  ].join(';');
 
-        const canvas = await html2canvas(pageEl, {
-          scale,
-          useCORS: true,
-          allowTaint: false,
-          logging: false,
-          backgroundColor: '#ffffff',
-          width: 794,
-          height: 1123,
-          scrollX: 0,
-          scrollY: 0,
-          windowWidth: 794,
-          windowHeight: 1123,
-        });
+  // Inject inlined CSS + page HTML into wrapper
+  wrapper.innerHTML = `<style>${PAGE_CSS}</style>${pageHTML}`;
+  document.body.appendChild(wrapper);
 
-        document.body.removeChild(iframe);
-        resolve(canvas);
-      } catch (err) {
-        if (document.body.contains(iframe)) document.body.removeChild(iframe);
-        reject(err);
-      }
-    };
+  // Allow browser to paint
+  await new Promise(r => setTimeout(r, 200));
 
-    iframe.srcdoc = srcdoc;   // ← key: uses parent's base URL, no about:blank
-    document.body.appendChild(iframe);
+  const pageEl = wrapper.querySelector('.page');
+  const canvas = await html2canvas(pageEl, {
+    scale: renderScale,
+    useCORS: true,
+    allowTaint: false,
+    logging: false,
+    backgroundColor: '#ffffff',
+    width: 794,
+    height: 1123,
+    scrollX: 0,
+    scrollY: 0,
+    windowWidth: 794,
+    windowHeight: 1123,
   });
+
+  document.body.removeChild(wrapper);
+  return canvas;
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-
-// Exact HTML to PDF Generation
+// PDF Generation
 document.getElementById('btn-download').addEventListener('click', async () => {
   const btn = document.getElementById('btn-download');
   const originalText = btn.innerHTML;
@@ -185,7 +210,7 @@ document.getElementById('btn-download').addEventListener('click', async () => {
   btn.disabled = true;
 
   try {
-    const canvas = await capturePageViaIframe(2);
+    const canvas = await capturePageClean(2);
     const imgData = canvas.toDataURL('image/png');
 
     const { jsPDF } = window.jspdf;
@@ -200,14 +225,14 @@ document.getElementById('btn-download').addEventListener('click', async () => {
 
   } catch (error) {
     console.error("Error generating PDF:", error);
-    alert("Failed to generate PDF. Make sure you're online and images are accessible.");
+    alert("Failed to generate PDF. Please try again.");
   } finally {
     btn.innerHTML = originalText;
     btn.disabled = false;
   }
 });
 
-// Export as PNG Logic
+// PNG Export
 document.getElementById('btn-export-png').addEventListener('click', async () => {
   const btn = document.getElementById('btn-export-png');
   const originalText = btn.innerHTML;
@@ -215,7 +240,7 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
   btn.disabled = true;
 
   try {
-    const canvas = await capturePageViaIframe(3);
+    const canvas = await capturePageClean(3);
     const imgData = canvas.toDataURL('image/png');
 
     const a = document.createElement('a');
@@ -228,7 +253,7 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
 
   } catch (error) {
     console.error("Error exporting PNG:", error);
-    alert("Failed to export PNG. Make sure you're online and images are accessible.");
+    alert("Failed to export PNG. Please try again.");
   } finally {
     btn.innerHTML = originalText;
     btn.disabled = false;
