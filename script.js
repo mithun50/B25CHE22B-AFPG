@@ -202,8 +202,12 @@ async function capturePageClean(renderScale) {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ─── Mobile detection & toast ───────────────────────────────────────────────
-const isMobile = () => /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || window.innerWidth <= 768;
+// Reliable multi-signal mobile detection (catches all phones/tablets)
+const isMobile = () =>
+  navigator.maxTouchPoints > 1 ||          // touch screen (most reliable)
+  ('ontouchstart' in window) ||            // legacy touch API
+  window.innerWidth < 900 ||               // narrow viewport
+  /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop|Mobile/i.test(navigator.userAgent);
 
 function showToast(message) {
   const existing = document.getElementById('export-toast');
