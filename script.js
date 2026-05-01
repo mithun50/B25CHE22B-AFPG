@@ -115,11 +115,21 @@ document.getElementById('btn-download').addEventListener('click', async () => {
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: 794,
+      windowWidth: 1400, // Force desktop layout width
       width: 794,
       height: 1123,
       scrollX: 0,
-      scrollY: 0
+      scrollY: 0,
+      onclone: (clonedDoc) => {
+        // Remove sidebar in clone to give full width to the page preview
+        const sidebar = clonedDoc.querySelector('.sidebar');
+        if (sidebar) sidebar.style.display = 'none';
+        const previewArea = clonedDoc.querySelector('.preview-area');
+        if (previewArea) {
+          previewArea.style.width = '100vw';
+          previewArea.style.overflow = 'visible';
+        }
+      }
     });
 
     const imgData = canvas.toDataURL('image/png');
@@ -176,11 +186,20 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: 794,
+      windowWidth: 1400, // Force desktop layout width
       width: 794,
       height: 1123,
       scrollX: 0,
-      scrollY: 0
+      scrollY: 0,
+      onclone: (clonedDoc) => {
+        const sidebar = clonedDoc.querySelector('.sidebar');
+        if (sidebar) sidebar.style.display = 'none';
+        const previewArea = clonedDoc.querySelector('.preview-area');
+        if (previewArea) {
+          previewArea.style.width = '100vw';
+          previewArea.style.overflow = 'visible';
+        }
+      }
     });
 
     const imgData = canvas.toDataURL('image/png');
