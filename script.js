@@ -115,7 +115,11 @@ document.getElementById('btn-download').addEventListener('click', async () => {
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: 794
+      windowWidth: 794,
+      width: 794,
+      height: 1123,
+      scrollX: 0,
+      scrollY: 0
     });
 
     const imgData = canvas.toDataURL('image/png');
@@ -172,7 +176,11 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: 794
+      windowWidth: 794,
+      width: 794,
+      height: 1123,
+      scrollX: 0,
+      scrollY: 0
     });
 
     const imgData = canvas.toDataURL('image/png');
