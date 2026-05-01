@@ -480,8 +480,7 @@
   
     #template-root {
       transform-origin: top left;
-      /* Better scaling for mobile */
-      transform: scale(0.4) !important;
+      /* Scaling handled in JS */
     }
     
     .preview-toolbar {

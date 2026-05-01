@@ -63,7 +63,7 @@ Object.keys(formEls).forEach(key => {
 });
 
 // Zoom Controls
-let zoomLevel = 0.8;
+let zoomLevel = window.innerWidth <= 768 ? 0.4 : 0.8;
 const templateRoot = document.getElementById('template-root');
 const zoomInBtn = document.getElementById('btn-zoom-in');
 const zoomOutBtn = document.getElementById('btn-zoom-out');
@@ -114,7 +114,8 @@ document.getElementById('btn-download').addEventListener('click', async () => {
       scale: 2, // High resolution
       useCORS: true,
       logging: false,
-      backgroundColor: '#ffffff'
+      backgroundColor: '#ffffff',
+      windowWidth: 794
     });
 
     const imgData = canvas.toDataURL('image/png');
@@ -170,7 +171,8 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
       scale: 3, // Very high resolution for image export
       useCORS: true,
       logging: false,
-      backgroundColor: '#ffffff'
+      backgroundColor: '#ffffff',
+      windowWidth: 794
     });
 
     const imgData = canvas.toDataURL('image/png');
