@@ -91,12 +91,44 @@ zoomOutBtn.addEventListener('click', () => {
 // Initialize zoom
 updateZoom();
 
-// ─── Shared capture helper ────────────────────────────────────────────────────
-// Renders the A4 page in a hidden 794px iframe so it is completely isolated
-// from all mobile transforms, DPR quirks, and flexbox constraints.
+// ─── Shared capture helper ─────────────────────────────────────────────────
+// Creates a hidden 794px-wide iframe via srcdoc (inherits parent base URL,
+// so styles.css / images resolve correctly) and renders the A4 page inside it
+// completely isolated from all mobile transforms and layout constraints.
 function capturePageViaIframe(scale) {
   return new Promise((resolve, reject) => {
+    const pageHTML = document.querySelector('#template-root .page').outerHTML;
+
+    // srcdoc iframes use the parent page's URL as base, so relative paths work
+    const srcdoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Exact desktop A4 environment — no mobile overrides */
+    html, body {
+      margin: 0; padding: 0;
+      width: 794px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .page {
+      width: 794px !important;
+      min-height: 1123px !important;
+      transform: none !important;
+      font-family: "Times New Roman", Times, serif !important;
+      box-shadow: none !important;
+    }
+  </style>
+</head>
+<body>
+  ${pageHTML}
+</body>
+</html>`;
+
     const iframe = document.createElement('iframe');
+    iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts');
     iframe.style.cssText = [
       'position:fixed',
       'top:-9999px',
@@ -105,49 +137,21 @@ function capturePageViaIframe(scale) {
       'height:1123px',
       'border:none',
       'visibility:hidden',
+      'pointer-events:none',
     ].join(';');
-    document.body.appendChild(iframe);
 
-    // Once the iframe is ready, write a slimmed-down copy of the page into it
     iframe.onload = async () => {
       try {
-        const iDoc = iframe.contentDocument;
-        // Copy all stylesheets from parent into the iframe
-        const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
-          .map(el => el.outerHTML).join('\n');
-        // Grab the exact page element HTML
-        const pageHTML = document.querySelector('#template-root .page').outerHTML;
-        // Build absolute URL for the stylesheet
-        const baseHref = location.href.replace(/\/[^/]*$/, '/');
-        iDoc.open();
-        iDoc.write(`<!DOCTYPE html><html><head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=794">
-          <base href="${baseHref}">
-          <link rel="stylesheet" href="styles.css">
-          <style>
-            /* Force A4 dimensions with no transforms */
-            html, body { margin:0; padding:0; background:#fff; width:794px; overflow:hidden; }
-            #capture-root { width:794px; }
-            #capture-root .page {
-              width:794px !important;
-              min-height:1123px !important;
-              transform:none !important;
-              font-family:"Times New Roman", Times, serif;
-            }
-          </style>
-        </head><body>
-          <div id="capture-root">${pageHTML}</div>
-        </body></html>`);
-        iDoc.close();
+        // Wait for stylesheet + images to fully load inside the iframe
+        await new Promise(r => setTimeout(r, 800));
 
-        // Wait for fonts + images to settle
-        await new Promise(r => setTimeout(r, 600));
+        const pageEl = iframe.contentDocument.querySelector('.page');
+        if (!pageEl) throw new Error('Page element not found in iframe');
 
-        const pageEl = iDoc.querySelector('#capture-root .page');
         const canvas = await html2canvas(pageEl, {
           scale,
           useCORS: true,
+          allowTaint: false,
           logging: false,
           backgroundColor: '#ffffff',
           width: 794,
@@ -161,15 +165,17 @@ function capturePageViaIframe(scale) {
         document.body.removeChild(iframe);
         resolve(canvas);
       } catch (err) {
-        document.body.removeChild(iframe);
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
         reject(err);
       }
     };
 
-    iframe.src = 'about:blank';
+    iframe.srcdoc = srcdoc;   // ← key: uses parent's base URL, no about:blank
+    document.body.appendChild(iframe);
   });
 }
 // ─────────────────────────────────────────────────────────────────────────────
+
 
 // Exact HTML to PDF Generation
 document.getElementById('btn-download').addEventListener('click', async () => {
