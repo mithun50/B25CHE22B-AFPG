@@ -117,11 +117,14 @@ function capturePageViaIframe(scale) {
           .map(el => el.outerHTML).join('\n');
         // Grab the exact page element HTML
         const pageHTML = document.querySelector('#template-root .page').outerHTML;
+        // Build absolute URL for the stylesheet
+        const baseHref = location.href.replace(/\/[^/]*$/, '/');
         iDoc.open();
         iDoc.write(`<!DOCTYPE html><html><head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=794">
-          ${styleLinks}
+          <base href="${baseHref}">
+          <link rel="stylesheet" href="styles.css">
           <style>
             /* Force A4 dimensions with no transforms */
             html, body { margin:0; padding:0; background:#fff; width:794px; overflow:hidden; }
