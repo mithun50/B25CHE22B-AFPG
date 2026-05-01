@@ -91,6 +91,83 @@ zoomOutBtn.addEventListener('click', () => {
 // Initialize zoom
 updateZoom();
 
+// ─── Shared capture helper ────────────────────────────────────────────────────
+// Renders the A4 page in a hidden 794px iframe so it is completely isolated
+// from all mobile transforms, DPR quirks, and flexbox constraints.
+function capturePageViaIframe(scale) {
+  return new Promise((resolve, reject) => {
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = [
+      'position:fixed',
+      'top:-9999px',
+      'left:-9999px',
+      'width:794px',
+      'height:1123px',
+      'border:none',
+      'visibility:hidden',
+    ].join(';');
+    document.body.appendChild(iframe);
+
+    // Once the iframe is ready, write a slimmed-down copy of the page into it
+    iframe.onload = async () => {
+      try {
+        const iDoc = iframe.contentDocument;
+        // Copy all stylesheets from parent into the iframe
+        const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+          .map(el => el.outerHTML).join('\n');
+        // Grab the exact page element HTML
+        const pageHTML = document.querySelector('#template-root .page').outerHTML;
+        iDoc.open();
+        iDoc.write(`<!DOCTYPE html><html><head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=794">
+          ${styleLinks}
+          <style>
+            /* Force A4 dimensions with no transforms */
+            html, body { margin:0; padding:0; background:#fff; width:794px; overflow:hidden; }
+            #capture-root { width:794px; }
+            #capture-root .page {
+              width:794px !important;
+              min-height:1123px !important;
+              transform:none !important;
+              font-family:"Times New Roman", Times, serif;
+            }
+          </style>
+        </head><body>
+          <div id="capture-root">${pageHTML}</div>
+        </body></html>`);
+        iDoc.close();
+
+        // Wait for fonts + images to settle
+        await new Promise(r => setTimeout(r, 600));
+
+        const pageEl = iDoc.querySelector('#capture-root .page');
+        const canvas = await html2canvas(pageEl, {
+          scale,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          width: 794,
+          height: 1123,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: 794,
+          windowHeight: 1123,
+        });
+
+        document.body.removeChild(iframe);
+        resolve(canvas);
+      } catch (err) {
+        document.body.removeChild(iframe);
+        reject(err);
+      }
+    };
+
+    iframe.src = 'about:blank';
+  });
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Exact HTML to PDF Generation
 document.getElementById('btn-download').addEventListener('click', async () => {
   const btn = document.getElementById('btn-download');
@@ -99,65 +176,22 @@ document.getElementById('btn-download').addEventListener('click', async () => {
   btn.disabled = true;
 
   try {
-    // --- Isolated Clone Capture (Mobile-safe) ---
-    // We never touch the live DOM's transform. Instead, we clone the A4 page,
-    // place it off-screen at 1:1 scale with no parent transforms, capture it,
-    // then destroy the clone. This is the only reliable cross-device approach.
-    const pageElement = document.querySelector('#template-root .page');
-    const clone = pageElement.cloneNode(true);
-    clone.style.cssText = [
-      'position: fixed',
-      'top: -9999px',
-      'left: -9999px',
-      'width: 794px',
-      'min-height: 1123px',
-      'transform: none',
-      'z-index: -1',
-      'background: #fff',
-      'font-family: "Times New Roman", Times, serif',
-    ].join(';');
-    document.body.appendChild(clone);
-
-    await new Promise(resolve => setTimeout(resolve, 150));
-
-    const canvas = await html2canvas(clone, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-      width: 794,
-      height: clone.scrollHeight || 1123,
-      windowWidth: 794,
-      scrollX: 0,
-      scrollY: 0
-    });
-
-    document.body.removeChild(clone);
-    // --- End Clone Capture ---
-
+    const canvas = await capturePageViaIframe(2);
     const imgData = canvas.toDataURL('image/png');
 
-    // Create jsPDF instance for A4
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
-
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    
-    // Download
+
     const fileName = `Chemistry_Front_Page_${formEls.studentName.value.replace(/\s+/g, '_')}.pdf`;
     pdf.save(fileName);
     logGeneration('PDF');
 
   } catch (error) {
     console.error("Error generating PDF:", error);
-    alert("Failed to generate PDF. Make sure images are on the same domain or properly configured for CORS.");
+    alert("Failed to generate PDF. Make sure you're online and images are accessible.");
   } finally {
     btn.innerHTML = originalText;
     btn.disabled = false;
@@ -172,42 +206,9 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
   btn.disabled = true;
 
   try {
-    // --- Isolated Clone Capture (Mobile-safe) ---
-    const pageElement = document.querySelector('#template-root .page');
-    const clone = pageElement.cloneNode(true);
-    clone.style.cssText = [
-      'position: fixed',
-      'top: -9999px',
-      'left: -9999px',
-      'width: 794px',
-      'min-height: 1123px',
-      'transform: none',
-      'z-index: -1',
-      'background: #fff',
-      'font-family: "Times New Roman", Times, serif',
-    ].join(';');
-    document.body.appendChild(clone);
-
-    await new Promise(resolve => setTimeout(resolve, 150));
-
-    const canvas = await html2canvas(clone, {
-      scale: 3,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-      width: 794,
-      height: clone.scrollHeight || 1123,
-      windowWidth: 794,
-      scrollX: 0,
-      scrollY: 0
-    });
-
-    document.body.removeChild(clone);
-    // --- End Clone Capture ---
-
+    const canvas = await capturePageViaIframe(3);
     const imgData = canvas.toDataURL('image/png');
-    
-    // Create download link
+
     const a = document.createElement('a');
     a.href = imgData;
     a.download = `Chemistry_Front_Page_${formEls.studentName.value.replace(/\s+/g, '_')}.png`;
@@ -218,7 +219,7 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
 
   } catch (error) {
     console.error("Error exporting PNG:", error);
-    alert("Failed to export PNG. Make sure images are on the same domain or properly configured for CORS.");
+    alert("Failed to export PNG. Make sure you're online and images are accessible.");
   } finally {
     btn.innerHTML = originalText;
     btn.disabled = false;
