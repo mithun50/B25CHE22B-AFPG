@@ -91,135 +91,58 @@ zoomOutBtn.addEventListener('click', () => {
 // Initialize zoom
 updateZoom();
 
-// ─── Fetch image as base64 ───────────────────────────────────────────────────
-async function fetchAsBase64(url) {
+// ─── Desktop-mode capture ────────────────────────────────────────────────────
+// Mimics what the browser's "Request Desktop Site" does:
+//   1. Temporarily change the viewport meta to force desktop width
+//   2. Reset the #template-root transform to scale(1) so there's no skew
+//   3. Wait for the browser to reflow at desktop layout
+//   4. Capture the live .page element with html2canvas
+//   5. Restore the viewport meta and transform exactly as they were
+// This works because the user confirmed "Desktop Site" mode exports correctly.
+async function capturePageDesktopMode(renderScale) {
+  const viewportMeta = document.querySelector('meta[name="viewport"]');
+  const originalViewport = viewportMeta ? viewportMeta.content : null;
+  const originalTransform = templateRoot.style.transform;
+
   try {
-    const res = await fetch(url);
-    const blob = await res.blob();
-    return await new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.readAsDataURL(blob);
+    // Step 1: Force desktop viewport (disables all @media max-width rules)
+    if (viewportMeta) viewportMeta.content = 'width=1200, initial-scale=1';
+
+    // Step 2: Reset template transform to 1:1
+    templateRoot.style.transform = 'scale(1)';
+    templateRoot.style.transformOrigin = 'top center';
+
+    // Step 3: Wait for full browser reflow
+    await new Promise(r => setTimeout(r, 400));
+
+    // Step 4: Capture the live element — it's now in "desktop" layout
+    const pageEl = document.querySelector('#template-root .page');
+    const canvas = await html2canvas(pageEl, {
+      scale: renderScale,
+      useCORS: true,
+      allowTaint: false,
+      logging: false,
+      backgroundColor: '#ffffff',
+      width: 794,
+      height: 1123,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 1200,
+      windowHeight: 900,
     });
-  } catch { return null; }
-}
 
-// ─── All CSS needed to render the A4 page (no #template-root prefix needed) ──
-const PAGE_CSS = `
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-.page {
-  width: 794px; min-height: 1123px; background: #fff;
-  display: flex; flex-direction: column; position: relative;
-  font-family: "Times New Roman", Times, serif; color: #000; padding: 18px;
-}
-.page-border-outer {
-  flex: 1; border: 4px solid #000; padding: 4px;
-  display: flex; flex-direction: column;
-}
-.page-border-inner {
-  flex: 1; border: 2px solid #000; padding: 50px 40px;
-  display: flex; flex-direction: column; align-items: center;
-}
-.header { text-align: center; margin-bottom: 25px; width: 100%; line-height: 1.5; }
-.college-name { font-size: 24px; font-weight: bold; margin-bottom: 4px; letter-spacing: 0.5px; }
-.university-name { font-size: 16px; margin-bottom: 4px; }
-.autonomous-badge { font-size: 15px; margin-bottom: 10px; }
-.logo-container { display: flex; justify-content: center; width: 100%; }
-.vtu-container { margin-bottom: 30px; }
-.vtu-logo { height: 125px; width: auto; object-fit: contain; }
-.dbit-container { margin: 40px 0 20px 0; }
-.dbit-logo { height: 130px; width: auto; object-fit: contain; }
-.topic-section { text-align: center; margin-bottom: 25px; width: 100%; line-height: 1.6; }
-.report-topic { font-size: 18px; margin-bottom: 8px; }
-.subject-name { font-size: 18px; font-weight: bold; }
-.degree-info { text-align: center; margin-bottom: 20px; font-size: 18px; line-height: 1.8; }
-.submitted-by-header { font-size: 18px; margin-bottom: 8px; text-align: left; }
-.footer-columns {
-  display: flex; justify-content: space-between; width: 100%;
-  padding: 0 10px; font-size: 18px; line-height: 1.8; margin-top: auto;
-}
-.student-column, .guide-column { text-align: left; }
-.info-row { margin-bottom: 8px; }
-.info-label { display: inline-block; min-width: 50px; }
-.guide-column .info-label { min-width: 85px; }
-`;
+    return canvas;
 
-// ─── Self-contained capture (works on all devices) ───────────────────────────
-// Strategy:
-//   1. Pre-fetch both logos as base64  → no CORS, no network issues
-//   2. Inline ALL required CSS         → no external stylesheet dependency
-//   3. Render as direct <body> child   → zero parent transforms
-//   4. Capture, then destroy           → clean, no side effects
-async function capturePageClean(renderScale) {
-  // 1. Pre-fetch logos as base64 data URIs
-  const [vtuB64, dbitB64] = await Promise.all([
-    fetchAsBase64('VTU.png'),
-    fetchAsBase64('dblogo.png'),
-  ]);
-
-  // 2. Get current live page HTML, swap image src with base64
-  let pageHTML = document.querySelector('#template-root .page').outerHTML;
-  if (vtuB64)  pageHTML = pageHTML.replace(/src="VTU\.png[^"]*"/,    `src="${vtuB64}"`);
-  if (dbitB64) pageHTML = pageHTML.replace(/src="dblogo\.png[^"]*"/, `src="${dbitB64}"`);
-
-  // 3. Build fully isolated wrapper directly on body
-  const wrapper = document.createElement('div');
-  wrapper.style.cssText = [
-    'position:fixed',
-    'top:-9999px',
-    'left:-9999px',
-    'width:794px',
-    'overflow:visible',
-    'transform:none',
-    'z-index:99999',
-    'background:#fff',
-  ].join(';');
-
-  // Inject inlined CSS + page HTML into wrapper
-  wrapper.innerHTML = `<style>${PAGE_CSS}</style>${pageHTML}`;
-  document.body.appendChild(wrapper);
-
-  // Allow browser to paint
-  await new Promise(r => setTimeout(r, 200));
-
-  const pageEl = wrapper.querySelector('.page');
-  const canvas = await html2canvas(pageEl, {
-    scale: renderScale,
-    useCORS: true,
-    allowTaint: false,
-    logging: false,
-    backgroundColor: '#ffffff',
-    width: 794,
-    height: 1123,
-    scrollX: 0,
-    scrollY: 0,
-    windowWidth: 794,
-    windowHeight: 1123,
-  });
-
-  document.body.removeChild(wrapper);
-  return canvas;
+  } finally {
+    // Step 5: Always restore — even if capture fails
+    if (viewportMeta && originalViewport) viewportMeta.content = originalViewport;
+    templateRoot.style.transform = originalTransform;
+    // Re-apply the correct zoom level for the current device
+    updateZoom();
+  }
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Reliable multi-signal mobile detection (catches all phones/tablets)
-const isMobile = () =>
-  navigator.maxTouchPoints > 1 ||          // touch screen (most reliable)
-  ('ontouchstart' in window) ||            // legacy touch API
-  window.innerWidth < 900 ||               // narrow viewport
-  /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop|Mobile/i.test(navigator.userAgent);
-
-function showToast(message) {
-  const existing = document.getElementById('export-toast');
-  if (existing) existing.remove();
-  const toast = document.createElement('div');
-  toast.id = 'export-toast';
-  toast.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>${message}</span>`;
-  toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:14px 20px;border-radius:12px;display:flex;align-items:center;gap:10px;font-family:sans-serif;font-size:14px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.3);z-index:99999;max-width:90vw;text-align:center';
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 5000);
-}
-// ─────────────────────────────────────────────────────────────────────────────
 
 // PDF Generation
 document.getElementById('btn-download').addEventListener('click', async () => {
@@ -229,11 +152,7 @@ document.getElementById('btn-download').addEventListener('click', async () => {
   btn.disabled = true;
 
   try {
-    if (isMobile()) {
-      showToast('Please open on a laptop or desktop to export.');
-      return;
-    }
-    const canvas = await capturePageClean(2);
+    const canvas = await capturePageDesktopMode(2);
     const imgData = canvas.toDataURL('image/png');
 
     const { jsPDF } = window.jspdf;
@@ -263,11 +182,7 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
   btn.disabled = true;
 
   try {
-    if (isMobile()) {
-      showToast('Please open on a laptop or desktop to export.');
-      return;
-    }
-    const canvas = await capturePageClean(3);
+    const canvas = await capturePageDesktopMode(3);
     const imgData = canvas.toDataURL('image/png');
 
     const a = document.createElement('a');
